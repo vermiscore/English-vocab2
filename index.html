@@ -1,13 +1,10 @@
 <!DOCTYPE html>
-
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vocabulary App</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
 
 <style>
     * {
@@ -29,7 +26,7 @@
     .app-container {
         width: 100%;
         max-width: 500px;
-        min-height: 400px;
+        height: 600px;
         background: linear-gradient(135deg, #234d3f 0%, #2d6552 100%);
         position: relative;
         border-radius: 12px;
@@ -39,12 +36,13 @@
 
     .panel {
         width: 100%;
-        min-height: 400px;
+        height: 100%;
         position: absolute;
         top: 0;
         left: 0;
         display: none;
         background: linear-gradient(135deg, #234d3f 0%, #2d6552 100%);
+        overflow-y: auto;
     }
 
     .panel.active {
@@ -87,7 +85,6 @@
         text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
     }
 
-    /* Home panel buttons */
     .home-btn {
         width: 100px;
         height: 40px;
@@ -112,16 +109,15 @@
         top: 300px;
     }
 
-    /* Import panel */
     #importPanel {
-        padding: 30px 20px;
+        padding: 30px 20px 40px 20px;
     }
 
     .import-title {
         text-align: center;
         color: #e8f5e9;
         padding-top: 10px;
-        margin-bottom: 20px;
+        margin-bottom: 15px;
         font-size: 24px;
         font-weight: 600;
     }
@@ -130,7 +126,7 @@
         text-align: center;
         color: #c8e6c9;
         font-size: 13px;
-        margin-bottom: 30px;
+        margin-bottom: 20px;
         line-height: 1.5;
         padding: 0 10px;
     }
@@ -139,9 +135,9 @@
         background: rgba(74, 157, 127, 0.2);
         border: 2px dashed #4a9d7f;
         border-radius: 12px;
-        padding: 30px;
+        padding: 25px;
         text-align: center;
-        margin-bottom: 25px;
+        margin-bottom: 20px;
         transition: all 0.3s;
     }
 
@@ -185,7 +181,7 @@
     .file-name {
         color: #c8e6c9;
         font-weight: 600;
-        margin-top: 15px;
+        margin-top: 12px;
         font-size: 13px;
         min-height: 20px;
     }
@@ -194,7 +190,7 @@
         width: calc(100% - 40px);
         max-width: 400px;
         padding: 12px;
-        margin: 20px auto;
+        margin: 15px auto;
         display: block;
         font-size: 14px;
         background: #2d5f4d;
@@ -203,9 +199,62 @@
         border-radius: 8px;
     }
 
+    .range-selector {
+        width: calc(100% - 40px);
+        max-width: 400px;
+        margin: 15px auto;
+        padding: 15px;
+        background: rgba(74, 157, 127, 0.2);
+        border-radius: 8px;
+        display: none;
+    }
+
+    .range-selector.visible {
+        display: block;
+    }
+
+    .range-label {
+        color: #e8f5e9;
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 10px;
+        text-align: center;
+    }
+
+    .range-inputs {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .range-inputs input {
+        width: 80px;
+        padding: 8px;
+        font-size: 14px;
+        background: #2d5f4d;
+        color: #e8f5e9;
+        border: 2px solid #4a9d7f;
+        border-radius: 6px;
+        text-align: center;
+    }
+
+    .range-inputs span {
+        color: #c8e6c9;
+        font-weight: 600;
+    }
+
+    .total-count {
+        color: #c8e6c9;
+        font-size: 12px;
+        text-align: center;
+        margin-top: 8px;
+    }
+
     #importBtn {
         display: block;
-        margin: 20px auto;
+        margin: 15px auto;
         width: 200px;
         height: 45px;
         font-size: 16px;
@@ -213,21 +262,21 @@
 
     #backBtn {
         display: block;
-        margin: 20px auto;
+        margin: 15px auto 30px auto;
         width: 150px;
         height: 40px;
     }
 
     #importStatus {
         text-align: center;
-        margin-top: 20px;
+        margin-top: 15px;
+        margin-bottom: 20px;
         color: #c8e6c9;
         font-weight: 500;
         padding: 0 20px;
         min-height: 24px;
     }
 
-    /* Quiz panel elements */
     #wordLabel {
         position: absolute;
         top: 40px;
@@ -303,7 +352,6 @@
     }
 </style>
 
-
 </head>
 
 <body>
@@ -317,46 +365,54 @@
             <button id="btnImport" class="btn home-btn">Import</button>
         </div>
 
-```
-    <!-- Import Panel -->
-    <div id="importPanel" class="panel">
-        <h2 class="import-title">Import Excel File</h2>
-        <p class="import-description">Select an Excel file from your device</p>
+        <!-- Import Panel -->
+        <div id="importPanel" class="panel">
+            <h2 class="import-title">Import Excel File</h2>
+            <p class="import-description">Select an Excel file from your device</p>
 
-        <div class="upload-box">
-            <div class="file-input-wrapper">
-                <div class="upload-button">📁 Select File</div>
-                <input 
-                    type="file" 
-                    id="fileInput" 
-                    accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,image/*"
-                />
+            <div class="upload-box">
+                <div class="file-input-wrapper">
+                    <div class="upload-button">📁 Select File</div>
+                    <input 
+                        type="file" 
+                        id="fileInput" 
+                        accept="image/*,video/*,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                    />
+                </div>
+                <div class="file-name" id="fileName"></div>
             </div>
-            <div class="file-name" id="fileName"></div>
+
+            <select id="sheetSelector" style="display: none;">
+                <option value="">Select a sheet</option>
+            </select>
+
+            <div id="rangeSelector" class="range-selector">
+                <div class="range-label">Select Question Range</div>
+                <div class="range-inputs">
+                    <input type="number" id="rangeStart" min="1" value="1" />
+                    <span>to</span>
+                    <input type="number" id="rangeEnd" min="1" value="1" />
+                </div>
+                <div class="total-count" id="totalCount"></div>
+            </div>
+
+            <button id="importBtn" class="btn" style="display: none;">Load Selected Range</button>
+            <button id="backBtn" class="btn">Back</button>
+            <div id="importStatus"></div>
         </div>
 
-        <select id="sheetSelector" style="display: none;">
-            <option value="">Select a sheet</option>
-        </select>
-
-        <button id="importBtn" class="btn" style="display: none;">Load Selected Sheet</button>
-        <button id="backBtn" class="btn">Back</button>
-        <div id="importStatus"></div>
+        <!-- Quiz Panel -->
+        <div id="quizPanel" class="panel">
+            <div id="wordLabel"></div>
+            <div id="infoLabel"></div>
+            <button id="btnCorrect" class="btn quiz-btn">〇</button>
+            <button id="btnWrong" class="btn quiz-btn">×</button>
+            <button id="btnNext" class="btn quiz-btn">Next</button>
+            <button id="btnHome" class="btn quiz-btn">Home</button>
+        </div>
     </div>
-
-    <!-- Quiz Panel -->
-    <div id="quizPanel" class="panel">
-        <div id="wordLabel"></div>
-        <div id="infoLabel"></div>
-        <button id="btnCorrect" class="btn quiz-btn">〇</button>
-        <button id="btnWrong" class="btn quiz-btn">×</button>
-        <button id="btnNext" class="btn quiz-btn">Next</button>
-        <button id="btnHome" class="btn quiz-btn">Home</button>
-    </div>
-</div>
 
 <script>
-    // Default sample vocabulary data
     let allWords = [
         { word: "Apple", meaning: "りんご", example: "I like apples." },
         { word: "Banana", meaning: "バナナ", example: "Bananas are yellow." },
@@ -368,10 +424,9 @@
         { word: "Sun", meaning: "太陽", example: "The sun is bright." }
     ];
 
-    // Store Excel workbook temporarily
     let workbook = null;
+    let currentSheetData = null;
 
-    // Application state
     let state = {
         remainingIdx: Array.from({ length: allWords.length }, (_, i) => i),
         wrongWords: [],
@@ -380,7 +435,6 @@
         xOnlyMode: false
     };
 
-    // Load saved vocabulary data
     function loadVocabulary() {
         const saved = localStorage.getItem('vocabData');
         if (saved) {
@@ -389,12 +443,10 @@
         }
     }
 
-    // Save vocabulary data
     function saveVocabulary() {
         localStorage.setItem('vocabData', JSON.stringify(allWords));
     }
 
-    // Load saved progress
     function loadProgress() {
         const saved = localStorage.getItem('vocabProgress');
         if (saved) {
@@ -405,7 +457,6 @@
         }
     }
 
-    // Save progress
     function saveProgress() {
         localStorage.setItem('vocabProgress', JSON.stringify({
             remainingIdx: state.remainingIdx,
@@ -414,16 +465,45 @@
         }));
     }
 
-    // Handle local file selection
+    function updateRangeSelector(totalRows) {
+        const rangeStart = document.getElementById('rangeStart');
+        const rangeEnd = document.getElementById('rangeEnd');
+        const totalCount = document.getElementById('totalCount');
+
+        rangeStart.max = totalRows;
+        rangeEnd.max = totalRows;
+        rangeEnd.value = totalRows;
+
+        totalCount.textContent = `Total questions: ${totalRows}`;
+    }
+
+    function validateRange() {
+        const rangeStart = document.getElementById('rangeStart');
+        const rangeEnd = document.getElementById('rangeEnd');
+
+        const start = parseInt(rangeStart.value);
+        const end = parseInt(rangeEnd.value);
+
+        if (start > end) {
+            rangeStart.value = end;
+        }
+        if (end < start) {
+            rangeEnd.value = start;
+        }
+    }
+
+    document.getElementById('rangeStart').addEventListener('input', validateRange);
+    document.getElementById('rangeEnd').addEventListener('input', validateRange);
+
     document.getElementById('fileInput').addEventListener('change', function (e) {
         const file = e.target.files[0];
         if (!file) return;
 
         document.getElementById('fileName').textContent = `Selected: ${file.name}`;
 
-        // Check if it's an image (from camera or photo library)
-        if (file.type.startsWith('image/')) {
-            document.getElementById('importStatus').textContent = 'Image files are not supported yet. Please select an Excel file (.xlsx or .xls).';
+        // Check if it's an image or video file
+        if (file.type.startsWith('image/') || file.type.startsWith('video/')) {
+            document.getElementById('importStatus').textContent = 'Image and video files are not supported. Please select an Excel file (.xlsx or .xls).';
             return;
         }
 
@@ -443,41 +523,67 @@
                 });
 
                 selector.style.display = 'block';
-                document.getElementById('importBtn').style.display = 'block';
                 document.getElementById('importStatus').textContent = 'File loaded. Select a sheet.';
             } catch (error) {
                 document.getElementById('importStatus').textContent = 'Error reading file. Please select a valid Excel file.';
                 console.error('Error:', error);
             }
         };
+        
+        reader.onerror = function() {
+            document.getElementById('importStatus').textContent = 'Error reading file. Please try again.';
+        };
+        
         reader.readAsArrayBuffer(file);
     });
 
-    // Handle import button click
-    document.getElementById('importBtn').addEventListener('click', function () {
-        const sheetName = document.getElementById('sheetSelector').value;
+    document.getElementById('sheetSelector').addEventListener('change', function () {
+        const sheetName = this.value;
         if (!sheetName) {
-            document.getElementById('importStatus').textContent = 'Please select a sheet.';
+            document.getElementById('rangeSelector').classList.remove('visible');
+            document.getElementById('importBtn').style.display = 'none';
             return;
         }
 
         const worksheet = workbook.Sheets[sheetName];
         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-        const newWords = [];
-        for (let i = 0; i < jsonData.length; i++) {
-            const row = jsonData[i];
-            if (row[0] && row[1]) {
-                newWords.push({
-                    word: String(row[0]).trim(),
-                    meaning: String(row[1]).trim(),
-                    example: row[2] ? String(row[2]).trim() : ''
-                });
-            }
+        const validRows = jsonData.filter(row => row[0] && row[1]);
+        currentSheetData = validRows;
+
+        if (validRows.length === 0) {
+            document.getElementById('importStatus').textContent = 'No valid data found in sheet.';
+            document.getElementById('rangeSelector').classList.remove('visible');
+            document.getElementById('importBtn').style.display = 'none';
+            return;
         }
 
+        updateRangeSelector(validRows.length);
+        document.getElementById('rangeSelector').classList.add('visible');
+        document.getElementById('importBtn').style.display = 'block';
+        document.getElementById('importStatus').textContent = '';
+    });
+
+    document.getElementById('importBtn').addEventListener('click', function () {
+        const sheetName = document.getElementById('sheetSelector').value;
+        if (!sheetName || !currentSheetData) {
+            document.getElementById('importStatus').textContent = 'Please select a sheet.';
+            return;
+        }
+
+        const rangeStart = parseInt(document.getElementById('rangeStart').value);
+        const rangeEnd = parseInt(document.getElementById('rangeEnd').value);
+
+        const selectedRows = currentSheetData.slice(rangeStart - 1, rangeEnd);
+
+        const newWords = selectedRows.map(row => ({
+            word: String(row[0]).trim(),
+            meaning: String(row[1]).trim(),
+            example: row[2] ? String(row[2]).trim() : ''
+        }));
+
         if (newWords.length === 0) {
-            document.getElementById('importStatus').textContent = 'No valid data found in sheet.';
+            document.getElementById('importStatus').textContent = 'No valid data in selected range.';
             return;
         }
 
@@ -489,14 +595,13 @@
         saveVocabulary();
         saveProgress();
 
-        document.getElementById('importStatus').textContent = `Successfully imported ${newWords.length} words!`;
+        document.getElementById('importStatus').textContent = `Successfully imported ${newWords.length} words (${rangeStart} to ${rangeEnd})!`;
 
         setTimeout(() => {
             switchPanel('home');
         }, 2000);
     });
 
-    // Show next word randomly
     function showNextWord() {
         const wordLabel = document.getElementById('wordLabel');
         const infoLabel = document.getElementById('infoLabel');
@@ -535,14 +640,12 @@
         infoLabel.textContent = '';
     }
 
-    // Reveal meaning and example
     function revealInfo() {
         const word = allWords[state.currentWordIdx];
         const infoLabel = document.getElementById('infoLabel');
         infoLabel.textContent = `Meaning: ${word.meaning}\nExample: ${word.example}`;
     }
 
-    // Mark word as wrong (×)
     function markWrong() {
         if (!state.wrongWords.includes(state.currentWordIdx)) {
             state.wrongWords.push(state.currentWordIdx);
@@ -551,7 +654,6 @@
         saveProgress();
     }
 
-    // Mark word as correct (〇)
     function markCorrect() {
         if (!state.correctWords.includes(state.currentWordIdx)) {
             state.correctWords.push(state.currentWordIdx);
@@ -566,7 +668,6 @@
         saveProgress();
     }
 
-    // Reset correct words
     function resetCorrectWords() {
         state.remainingIdx = Array.from(new Set([...state.remainingIdx, ...state.correctWords]));
         state.correctWords = [];
@@ -575,7 +676,6 @@
         showNextWord();
     }
 
-    // Switch between panels
     function switchPanel(panelName, xOnlyMode = false) {
         const panels = ['homePanel', 'quizPanel', 'importPanel'];
         panels.forEach(p => {
@@ -587,10 +687,13 @@
             state.xOnlyMode = xOnlyMode;
             showNextWord();
         } else if (panelName === 'import') {
-            document.getElementById('importPanel').classList.add('active');
+            const importPanel = document.getElementById('importPanel');
+            importPanel.classList.add('active');
+            importPanel.scrollTop = 0;
             document.getElementById('fileInput').value = '';
             document.getElementById('fileName').textContent = '';
             document.getElementById('sheetSelector').style.display = 'none';
+            document.getElementById('rangeSelector').classList.remove('visible');
             document.getElementById('importBtn').style.display = 'none';
             document.getElementById('importStatus').textContent = '';
         } else {
@@ -598,12 +701,10 @@
         }
     }
 
-    // Event listeners - File upload button
     document.querySelector('.upload-button').addEventListener('click', () => {
         document.getElementById('fileInput').click();
     });
 
-    // Event listeners - Navigation
     document.getElementById('btnStart').addEventListener('click', () => switchPanel('quiz', false));
     document.getElementById('btnReset').addEventListener('click', resetCorrectWords);
     document.getElementById('btnXOnly').addEventListener('click', () => switchPanel('quiz', true));
@@ -614,12 +715,9 @@
     document.getElementById('btnHome').addEventListener('click', () => switchPanel('home'));
     document.getElementById('backBtn').addEventListener('click', () => switchPanel('home'));
 
-    // Initialize app
     loadVocabulary();
     loadProgress();
 </script>
 
-
 </body>
-
 </html>
