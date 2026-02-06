@@ -119,9 +119,18 @@
         text-align: center;
         color: #e8f5e9;
         padding-top: 10px;
-        margin-bottom: 30px;
+        margin-bottom: 20px;
         font-size: 24px;
         font-weight: 600;
+    }
+
+    .import-description {
+        text-align: center;
+        color: #c8e6c9;
+        font-size: 13px;
+        margin-bottom: 30px;
+        line-height: 1.5;
+        padding: 0 10px;
     }
 
     .upload-box {
@@ -345,11 +354,22 @@
     <!-- Import Panel -->
     <div id="importPanel" class="panel">
         <h2 class="import-title">Import Excel File</h2>
+        <p class="import-description">On mobile, you can choose from Photo Library, Camera, Files, or Google Drive</p>
 
         <div class="upload-box">
             <div class="file-input-wrapper">
-                <div class="upload-button">📁 Select Local File</div>
-                <input type="file" id="fileInput" accept=".xlsx, .xls" />
+                <div class="upload-button">📁 Select File</div>
+                <!-- 
+                    Key attributes for mobile action sheet:
+                    - accept: specifies file types (triggers different options)
+                    - capture: on mobile, prioritizes camera/photo options
+                    - multiple: allows selecting multiple files (optional)
+                -->
+                <input 
+                    type="file" 
+                    id="fileInput" 
+                    accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,image/*"
+                />
             </div>
             <div class="file-name" id="fileName"></div>
         </div>
@@ -554,23 +574,34 @@
 
         document.getElementById('fileName').textContent = `Selected: ${file.name}`;
 
+        // Check if it's an image (from camera or photo library)
+        if (file.type.startsWith('image/')) {
+            document.getElementById('importStatus').textContent = 'Image files are not supported yet. Please select an Excel file (.xlsx or .xls).';
+            return;
+        }
+
         const reader = new FileReader();
         reader.onload = function (e) {
-            const data = new Uint8Array(e.target.result);
-            workbook = XLSX.read(data, { type: 'array' });
+            try {
+                const data = new Uint8Array(e.target.result);
+                workbook = XLSX.read(data, { type: 'array' });
 
-            const selector = document.getElementById('sheetSelector');
-            selector.innerHTML = '<option value="">Select a sheet...</option>';
-            workbook.SheetNames.forEach(name => {
-                const option = document.createElement('option');
-                option.value = name;
-                option.textContent = name;
-                selector.appendChild(option);
-            });
+                const selector = document.getElementById('sheetSelector');
+                selector.innerHTML = '<option value="">Select a sheet...</option>';
+                workbook.SheetNames.forEach(name => {
+                    const option = document.createElement('option');
+                    option.value = name;
+                    option.textContent = name;
+                    selector.appendChild(option);
+                });
 
-            selector.style.display = 'block';
-            document.getElementById('importBtn').style.display = 'block';
-            document.getElementById('importStatus').textContent = 'File loaded. Select a sheet.';
+                selector.style.display = 'block';
+                document.getElementById('importBtn').style.display = 'block';
+                document.getElementById('importStatus').textContent = 'File loaded. Select a sheet.';
+            } catch (error) {
+                document.getElementById('importStatus').textContent = 'Error reading file. Please select a valid Excel file.';
+                console.error('Error:', error);
+            }
         };
         reader.readAsArrayBuffer(file);
     });
