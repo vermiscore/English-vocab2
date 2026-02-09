@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -107,6 +108,41 @@
 
     #btnImport {
         top: 300px;
+    }
+
+    /* New: Import info display on home panel */
+    #importInfo {
+        position: absolute;
+        top: 360px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90%;
+        max-width: 450px;
+        background: rgba(74, 157, 127, 0.2);
+        border: 1px solid #4a9d7f;
+        border-radius: 8px;
+        padding: 12px;
+        color: #c8e6c9;
+        font-size: 12px;
+        line-height: 1.6;
+        display: none;
+        text-align: left;
+    }
+
+    #importInfo.visible {
+        display: block;
+    }
+
+    #importInfo .info-title {
+        color: #e8f5e9;
+        font-weight: 600;
+        margin-bottom: 6px;
+        font-size: 13px;
+    }
+
+    #importInfo .info-item {
+        margin: 3px 0;
+        padding-left: 8px;
     }
 
     #importPanel {
@@ -363,54 +399,63 @@
             <button id="btnReset" class="btn home-btn">Reset</button>
             <button id="btnXOnly" class="btn home-btn">× Only</button>
             <button id="btnImport" class="btn home-btn">Import</button>
-        </div>
 
-        <!-- Import Panel -->
-        <div id="importPanel" class="panel">
-            <h2 class="import-title">Import Excel File</h2>
-            <p class="import-description">Select an Excel file from your device</p>
 
-            <div class="upload-box">
-                <div class="file-input-wrapper">
-                    <div class="upload-button">📁 Select File</div>
-                    <input 
-                        type="file" 
-                        id="fileInput" 
-                        accept="image/*,video/*,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
-                    />
-                </div>
-                <div class="file-name" id="fileName"></div>
-            </div>
-
-            <select id="sheetSelector" style="display: none;">
-                <option value="">Select a sheet</option>
-            </select>
-
-            <div id="rangeSelector" class="range-selector">
-                <div class="range-label">Select Question Range</div>
-                <div class="range-inputs">
-                    <input type="number" id="rangeStart" min="1" value="1" />
-                    <span>to</span>
-                    <input type="number" id="rangeEnd" min="1" value="1" />
-                </div>
-                <div class="total-count" id="totalCount"></div>
-            </div>
-
-            <button id="importBtn" class="btn" style="display: none;">Load Selected Range</button>
-            <button id="backBtn" class="btn">Back</button>
-            <div id="importStatus"></div>
-        </div>
-
-        <!-- Quiz Panel -->
-        <div id="quizPanel" class="panel">
-            <div id="wordLabel"></div>
-            <div id="infoLabel"></div>
-            <button id="btnCorrect" class="btn quiz-btn">〇</button>
-            <button id="btnWrong" class="btn quiz-btn">×</button>
-            <button id="btnNext" class="btn quiz-btn">Next</button>
-            <button id="btnHome" class="btn quiz-btn">Home</button>
+        <!-- New: Import info display -->
+        <div id="importInfo">
+            <div class="info-title">Current Data:</div>
+            <div class="info-item" id="importInfoFile">File: -</div>
+            <div class="info-item" id="importInfoSheet">Sheet: -</div>
+            <div class="info-item" id="importInfoRange">Range: -</div>
         </div>
     </div>
+
+    <!-- Import Panel -->
+    <div id="importPanel" class="panel">
+        <h2 class="import-title">Import Excel File</h2>
+        <p class="import-description">Select an Excel file from your device</p>
+
+        <div class="upload-box">
+            <div class="file-input-wrapper">
+                <div class="upload-button">📁 Select File</div>
+                <input 
+                    type="file" 
+                    id="fileInput" 
+                    accept="image/*,video/*,.xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                />
+            </div>
+            <div class="file-name" id="fileName"></div>
+        </div>
+
+        <select id="sheetSelector" style="display: none;">
+            <option value="">Select a sheet</option>
+        </select>
+
+        <div id="rangeSelector" class="range-selector">
+            <div class="range-label">Select Question Range</div>
+            <div class="range-inputs">
+                <input type="number" id="rangeStart" min="1" value="1" />
+                <span>to</span>
+                <input type="number" id="rangeEnd" min="1" value="1" />
+            </div>
+            <div class="total-count" id="totalCount"></div>
+        </div>
+
+        <button id="importBtn" class="btn" style="display: none;">Load Selected Range</button>
+        <button id="backBtn" class="btn">Back</button>
+        <div id="importStatus"></div>
+    </div>
+
+    <!-- Quiz Panel -->
+    <div id="quizPanel" class="panel">
+        <div id="wordLabel"></div>
+        <div id="infoLabel"></div>
+        <button id="btnCorrect" class="btn quiz-btn">〇</button>
+        <button id="btnWrong" class="btn quiz-btn">×</button>
+        <button id="btnNext" class="btn quiz-btn">Next</button>
+        <button id="btnHome" class="btn quiz-btn">Home</button>
+    </div>
+</div>
 
 <script>
     let allWords = [
@@ -426,6 +471,7 @@
 
     let workbook = null;
     let currentSheetData = null;
+    let currentFileName = '';
 
     let state = {
         remainingIdx: Array.from({ length: allWords.length }, (_, i) => i),
@@ -433,6 +479,14 @@
         correctWords: [],
         currentWordIdx: -1,
         xOnlyMode: false
+    };
+
+    // Import metadata storage
+    let importMetadata = {
+        fileName: '',
+        sheetName: '',
+        rangeStart: 0,
+        rangeEnd: 0
     };
 
     function loadVocabulary() {
@@ -463,6 +517,35 @@
             wrongWords: state.wrongWords,
             correctWords: state.correctWords
         }));
+    }
+
+    function loadImportMetadata() {
+        const saved = localStorage.getItem('importMetadata');
+        if (saved) {
+            importMetadata = JSON.parse(saved);
+            updateImportInfoDisplay();
+        }
+    }
+
+    function saveImportMetadata() {
+        localStorage.setItem('importMetadata', JSON.stringify(importMetadata));
+        updateImportInfoDisplay();
+    }
+
+    function updateImportInfoDisplay() {
+        const importInfo = document.getElementById('importInfo');
+        const fileElem = document.getElementById('importInfoFile');
+        const sheetElem = document.getElementById('importInfoSheet');
+        const rangeElem = document.getElementById('importInfoRange');
+
+        if (importMetadata.fileName) {
+            importInfo.classList.add('visible');
+            fileElem.textContent = `File: ${importMetadata.fileName}`;
+            sheetElem.textContent = `Sheet: ${importMetadata.sheetName}`;
+            rangeElem.textContent = `Range: ${importMetadata.rangeStart} to ${importMetadata.rangeEnd}`;
+        } else {
+            importInfo.classList.remove('visible');
+        }
     }
 
     function updateRangeSelector(totalRows) {
@@ -499,6 +582,7 @@
         const file = e.target.files[0];
         if (!file) return;
 
+        currentFileName = file.name;
         document.getElementById('fileName').textContent = `Selected: ${file.name}`;
 
         // Check if it's an image or video file
@@ -592,8 +676,17 @@
         state.wrongWords = [];
         state.correctWords = [];
 
+        // Update import metadata
+        importMetadata = {
+            fileName: currentFileName,
+            sheetName: sheetName,
+            rangeStart: rangeStart,
+            rangeEnd: rangeEnd
+        };
+
         saveVocabulary();
         saveProgress();
+        saveImportMetadata();
 
         document.getElementById('importStatus').textContent = `Successfully imported ${newWords.length} words (${rangeStart} to ${rangeEnd})!`;
 
@@ -717,6 +810,7 @@
 
     loadVocabulary();
     loadProgress();
+    loadImportMetadata();
 </script>
 
 </body>
